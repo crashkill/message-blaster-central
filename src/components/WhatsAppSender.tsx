@@ -1,14 +1,17 @@
+import React, { useState, useEffect } from 'react';
+import { io } from 'socket.io-client';
+import QRCode from 'react-qr-code';
 
-import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Send, MessageSquare, Users, Moon, Sun } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Upload, Send, MessageSquare, Users, Moon, Sun, Eye, X, Download, Wifi, WifiOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 import InputMask from 'react-input-mask';
@@ -30,7 +33,40 @@ const WhatsAppSender = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [qrCode, setQrCode] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('connecting');
   const { toast } = useToast();
+
+  useEffect(() => {
+    const socket = io('http://localhost:3001');
+
+    socket.on('connect', () => {
+      console.log('Conectado ao servidor via Socket.io');
+    });
+
+    socket.on('qr', (qr) => {
+      setQrCode(qr);
+      setIsModalOpen(true);
+    });
+    
+    socket.on('ready', () => {
+      setIsModalOpen(false);
+      toast({
+        title: "Conectado!",
+        description: "A Galatéia está pronta para enviar suas mensagens.",
+        variant: "default",
+      });
+    });
+
+    socket.on('status', (status) => {
+        setConnectionStatus(status);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   const normalizePhone = (phone: string): string => {
     // Remove todos os caracteres não numéricos
@@ -94,7 +130,15 @@ const WhatsAppSender = () => {
     }
   };
 
-  const sendMessage = (contact: Contact) => {
+  const clearContacts = () => {
+    setContacts([]);
+    toast({
+      title: "Lista de contatos limpa",
+      description: "Você pode carregar um novo arquivo.",
+    });
+  };
+
+  const sendMessage = async (contact: Contact) => {
     if (!message.trim()) {
       toast({
         title: "Mensagem vazia",
@@ -105,10 +149,35 @@ const WhatsAppSender = () => {
     }
 
     const personalizedMessage = message.replace(/\{nome\}/g, contact.nome);
-    const encodedMessage = encodeURIComponent(personalizedMessage);
-    const whatsappUrl = `https://wa.me/${contact.telefone.replace('+', '')}?text=${encodedMessage}`;
     
-    window.open(whatsappUrl, '_blank');
+    try {
+      const response = await fetch('http://localhost:3001/api/send-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: contact.telefone,
+          message: personalizedMessage,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Falha ao enviar mensagem pelo servidor.');
+      }
+
+    } catch (error) {
+      console.error("Erro ao chamar a API do servidor:", error);
+      toast({
+        title: "Erro de Comunicação",
+        description: "Não foi possível conectar ao servidor para enviar a mensagem.",
+        variant: "destructive",
+      });
+      // Para o loop em caso de erro de comunicação
+      throw error;
+    }
   };
 
   const sendBulkMessages = async () => {
@@ -122,24 +191,31 @@ const WhatsAppSender = () => {
     }
 
     setIsLoading(true);
+    let sentCount = 0;
     
     for (let i = 0; i < contacts.length; i++) {
-      sendMessage(contacts[i]);
-      
-      // Aguarda 3 segundos entre cada envio (exceto no último)
-      if (i < contacts.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 3000));
+      try {
+        await sendMessage(contacts[i]);
+        sentCount++;
+        // Aguarda um tempo para não sobrecarregar
+        if (i < contacts.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 3000)); // 3 segundos de intervalo
+        }
+      } catch (error) {
+        // O erro já foi mostrado no toast dentro de sendMessage
+        // Paramos o envio em massa se um erro de comunicação ocorrer
+        break; 
       }
     }
 
     setIsLoading(false);
     toast({
-      title: "Envios iniciados!",
-      description: `${contacts.length} abas do WhatsApp foram abertas.`,
+      title: "Envio em Massa Finalizado!",
+      description: `${sentCount} de ${contacts.length} mensagens foram processadas pelo servidor.`,
     });
   };
 
-  const sendIndividualMessage = () => {
+  const sendIndividualMessage = async () => {
     if (!individualContact.nome || !individualContact.telefone) {
       toast({
         title: "Campos obrigatórios",
@@ -164,11 +240,15 @@ const WhatsAppSender = () => {
       email: individualContact.email
     };
 
-    sendMessage(contact);
-    toast({
-      title: "Mensagem enviada!",
-      description: "WhatsApp Web foi aberto em uma nova aba.",
-    });
+    try {
+      await sendMessage(contact);
+      toast({
+        title: "Mensagem Enviada!",
+        description: "A mensagem foi enviada para o servidor para disparo.",
+      });
+    } catch (error) {
+      // O erro já é tratado dentro da função sendMessage
+    }
   };
 
   React.useEffect(() => {
@@ -187,17 +267,32 @@ const WhatsAppSender = () => {
           <div className="flex items-center gap-3">
             <MessageSquare className="h-8 w-8 text-green-600" />
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              WhatsApp Sender
+              Galatéia Sender
             </h1>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setDarkMode(!darkMode)}
-            className="h-10 w-10"
-          >
-            {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                {connectionStatus === 'ready' && <Wifi className="h-5 w-5 text-green-500" />}
+                {connectionStatus === 'connecting' && <Wifi className="h-5 w-5 text-yellow-500 animate-pulse" />}
+                {connectionStatus === 'disconnected' && <WifiOff className="h-5 w-5 text-red-500" />}
+                {connectionStatus === 'qr' && <Wifi className="h-5 w-5 text-blue-500" />}
+                
+                <span className="capitalize">
+                    {connectionStatus === 'ready' ? 'Conectado' : 
+                     connectionStatus === 'qr' ? 'Aguardando QR Code' : 
+                     connectionStatus === 'auth_failure' ? 'Falha na Autenticação' :
+                     connectionStatus === 'disconnected' ? 'Desconectado' : 'Conectando...'}
+                </span>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setDarkMode(!darkMode)}
+              className="h-10 w-10"
+            >
+              {darkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
 
         {/* Message Composer */}
@@ -227,6 +322,28 @@ const WhatsAppSender = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Preview Section */}
+        {contacts.length > 0 && (
+          <Card className="mb-6 bg-blue-50 dark:bg-gray-800/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                Pré-visualização
+              </CardTitle>
+              <CardDescription>
+                Esta é uma prévia de como sua mensagem ficará para o primeiro contato: <strong>{contacts[0].nome}</strong>.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="p-4 border rounded-md bg-white dark:bg-gray-700 whitespace-pre-wrap">
+                {message.replace(/\{nome\}/g, contacts[0].nome) || (
+                  <span className="text-gray-500">Digite sua mensagem acima para ver a prévia.</span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -317,96 +434,93 @@ const WhatsAppSender = () => {
                 <CardHeader>
                   <CardTitle>Upload de Contatos</CardTitle>
                   <CardDescription>
-                    Faça upload de um arquivo .xlsx ou .csv com as colunas: Nome, Telefone, E-mail
+                    Faça upload de um arquivo .xlsx com as colunas "Nome" e "Telefone".
                   </CardDescription>
+                  <a href="/template_contatos.xlsx" download>
+                    <Button variant="outline" size="sm" className="mt-2 flex items-center gap-2">
+                      <Download className="h-4 w-4" />
+                      Baixar modelo da planilha
+                    </Button>
+                  </a>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400" />
-                        <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                          <span className="font-semibold">Clique para fazer upload</span> ou arraste o arquivo
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          XLSX ou CSV (MAX. 10MB)
-                        </p>
-                      </div>
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept=".xlsx,.csv"
-                        onChange={handleFileUpload}
-                        disabled={isLoading}
-                      />
-                    </label>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-center w-full">
+                      <Label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                          <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Clique para carregar</span> ou arraste e solte</p>
+                          <p className="text-xs text-gray-500">XLSX, XLS ou CSV</p>
+                        </div>
+                        <Input id="file-upload" type="file" onChange={handleFileUpload} accept=".xlsx, .xls, .csv" className="hidden" />
+                      </Label>
+                    </div>
+
+                    {contacts.length > 0 && (
+                      <>
+                        <div className="flex justify-between items-center mt-6 mb-2">
+                          <h3 className="text-lg font-semibold">Contatos Carregados ({contacts.length})</h3>
+                          <Button variant="ghost" size="sm" onClick={clearContacts} className="flex items-center gap-2">
+                            <X className="h-4 w-4" />
+                            Limpar Lista
+                          </Button>
+                        </div>
+                        <div className="rounded-md border max-h-96 overflow-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Nome</TableHead>
+                                <TableHead>Telefone</TableHead>
+                                <TableHead>Status</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {contacts.map((contact, index) => (
+                                <TableRow key={index}>
+                                  <TableCell>{contact.nome}</TableCell>
+                                  <TableCell>{contact.telefone}</TableCell>
+                                  <TableCell>
+                                    <Badge variant="secondary">
+                                      Aguardando
+                                    </Badge>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </CardContent>
+                <CardFooter>
+                  <Button
+                    className="w-full flex items-center gap-2"
+                    onClick={sendBulkMessages}
+                    disabled={isLoading || contacts.length === 0}
+                  >
+                    {isLoading ? 'Enviando...' : `Enviar para ${contacts.length} contatos`}
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </CardFooter>
               </Card>
-
-              {/* Contacts Preview */}
-              {contacts.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle>Contatos Carregados</CardTitle>
-                        <CardDescription>
-                          Preview dos contatos que serão processados
-                        </CardDescription>
-                      </div>
-                      <Badge variant="secondary" className="text-lg px-3 py-1">
-                        {contacts.length} contatos
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="rounded-md border max-h-96 overflow-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Nome</TableHead>
-                            <TableHead>Telefone</TableHead>
-                            <TableHead>E-mail</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {contacts.map((contact, index) => (
-                            <TableRow key={index}>
-                              <TableCell className="font-medium">{contact.nome}</TableCell>
-                              <TableCell>{contact.telefone}</TableCell>
-                              <TableCell>{contact.email || '-'}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                    <div className="mt-4">
-                      <Button 
-                        onClick={sendBulkMessages}
-                        className="w-full"
-                        disabled={isLoading || !message.trim()}
-                      >
-                        {isLoading ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Enviando...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="h-4 w-4 mr-2" />
-                            Enviar para todos os contatos
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
           </TabsContent>
         </Tabs>
       </div>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Conecte seu WhatsApp</DialogTitle>
+            <DialogDescription>
+              Escaneie o QR Code abaixo com o app do WhatsApp no seu celular para iniciar a sessão.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center p-4 bg-white">
+            {qrCode && <QRCode value={qrCode} size={256} />}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

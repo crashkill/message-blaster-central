@@ -1,24 +1,25 @@
+# Cache e sessão do whatsapp-web.js
+.wwebjs_auth/
+.wwebjs_cache/
+
+# Dependências
+node_modules/
+server/node_modules/
+
 # Logs
-logs
-*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+# Build
 dist
-dist-ssr
-*.local
+build
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Env
+.env
+.env.local
+.env.*.local
+
+# Outros
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
