@@ -8,7 +8,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:8084", "http://localhost:8085", "http://localhost:8086"], // A porta do seu frontend
+        // Permite conexões vindas do frontend. Ajuste as portas conforme necessidade.
+        origin: [
+            "http://localhost:8080", // Porta padrão do Vite
+            "http://localhost:8084",
+            "http://localhost:8085",
+            "http://localhost:8086"
+        ],
         methods: ["GET", "POST"]
     }
 });

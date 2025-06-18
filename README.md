@@ -71,3 +71,58 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Galatéia Sender – Automação de Mensagens WhatsApp
+
+### Visão Geral
+Aplicação full-stack que permite:
+* Envio individual ou em massa de mensagens via WhatsApp Web.
+* Personalização de texto com placeholders (ex.: `{nome}`).
+* Upload de planilha XLSX com lista de contatos.
+* Interface em React + shadcn-ui com tema claro/escuro.
+* Comunicação em tempo real via Socket.io com backend Node.js.
+
+### Instalação local
+```bash
+# Clonar o repositório
+git clone <repo>
+cd message-blaster-central
+
+# Instalar dependências
+npm i
+npm --prefix server i
+
+# Rodar desenvolvimento
+# 1 – backend
+npm run dev:server
+# 2 – frontend
+npm run dev
+```
+Frontend inicia por padrão em `http://localhost:8080` (ou próxima porta livre).
+
+### Uso
+1. **Escaneie o QR Code**: na primeira execução, será solicitado o login no WhatsApp Web.
+2. **Compose sua mensagem**: escreva o texto (suporta `{nome}`).
+3. **Envio Individual**: preencha nome/telefone e clique _Enviar_.
+4. **Envio em Massa**:
+   * Baixe o modelo de planilha em **Upload de Contatos**.
+   * Preencha com Nome & Telefone (colunas obrigatórias).
+   * Faça upload, revise a pré-visualização e clique _Enviar_.
+
+### Segurança
+* Sessão do WhatsApp é armazenada em `.wwebjs_auth/` (já no `.gitignore`).
+* Origem da conexão Socket.io limitada a `localhost` durante o dev.
+
+### Scripts úteis
+| Comando | Descrição |
+|---------|-----------|
+| `npm run build` | build de produção (Vite) |
+| `npm run dev` | inicia Vite + HMR |
+| `npm run dev:server` | inicia backend com Nodemon |
+
+---
+### Changelog (últimas principais alterações)
+* **SplashScreen** com animação `anime.js` (10 s).
+* Efeito `TiltCard` nos principais cards (Framer Motion).
+* Correção de reinício em loop do backend (Nodemon + `.wwebjs_*` ignorados).
+* Suporte a envio de mensagem em massa + preview personalizado.

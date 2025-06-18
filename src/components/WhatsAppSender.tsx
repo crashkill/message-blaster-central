@@ -15,6 +15,7 @@ import { Upload, Send, MessageSquare, Users, Moon, Sun, Eye, X, Download, Wifi, 
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
 import InputMask from 'react-input-mask';
+import TiltCard from '@/components/TiltCard';
 
 interface Contact {
   nome: string;
@@ -237,7 +238,7 @@ const WhatsAppSender = () => {
     const contact: Contact = {
       nome: individualContact.nome,
       telefone: normalizePhone(individualContact.telefone),
-      email: individualContact.email
+      email: individualContact.email,
     };
 
     try {
@@ -296,32 +297,34 @@ const WhatsAppSender = () => {
         </div>
 
         {/* Message Composer */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              Compose sua mensagem
-            </CardTitle>
-            <CardDescription>
-              Use {'{nome}'} para personalizar a mensagem com o nome do contato
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Textarea
-                placeholder="Olá {nome}, como vai? Esta é uma mensagem automática..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={4}
-                className="resize-none"
-              />
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>Use {'{nome}'} para personalização</span>
-                <span>{message.length}/1000 caracteres</span>
+        <TiltCard>
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5" />
+                Compose sua mensagem
+              </CardTitle>
+              <CardDescription>
+                Use {'{nome}'} para personalizar a mensagem com o nome do contato
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Olá {nome}, como vai? Esta é uma mensagem automática..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={4}
+                  className="resize-none"
+                />
+                <div className="flex justify-between text-sm text-gray-500">
+                  <span>Use {'{nome}'} para personalização</span>
+                  <span>{message.length}/1000 caracteres</span>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </TiltCard>
 
         {/* Preview Section */}
         {contacts.length > 0 && (
@@ -430,80 +433,82 @@ const WhatsAppSender = () => {
           <TabsContent value="bulk">
             <div className="space-y-6">
               {/* File Upload */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Upload de Contatos</CardTitle>
-                  <CardDescription>
-                    Faça upload de um arquivo .xlsx com as colunas "Nome" e "Telefone".
-                  </CardDescription>
-                  <a href="/template_contatos.xlsx" download>
-                    <Button variant="outline" size="sm" className="mt-2 flex items-center gap-2">
-                      <Download className="h-4 w-4" />
-                      Baixar modelo da planilha
-                    </Button>
-                  </a>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-center w-full">
-                      <Label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <Upload className="w-8 h-8 mb-4 text-gray-500" />
-                          <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Clique para carregar</span> ou arraste e solte</p>
-                          <p className="text-xs text-gray-500">XLSX, XLS ou CSV</p>
-                        </div>
-                        <Input id="file-upload" type="file" onChange={handleFileUpload} accept=".xlsx, .xls, .csv" className="hidden" />
-                      </Label>
-                    </div>
+              <TiltCard>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Upload de Contatos</CardTitle>
+                    <CardDescription>
+                      Faça upload de um arquivo .xlsx com as colunas "Nome" e "Telefone".
+                    </CardDescription>
+                    <a href="/template_contatos.xlsx" download>
+                      <Button variant="outline" size="sm" className="mt-2 flex items-center gap-2">
+                        <Download className="h-4 w-4" />
+                        Baixar modelo da planilha
+                      </Button>
+                    </a>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-center w-full">
+                        <Label htmlFor="file-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <Upload className="w-8 h-8 mb-4 text-gray-500" />
+                            <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Clique para carregar</span> ou arraste e solte</p>
+                            <p className="text-xs text-gray-500">XLSX, XLS ou CSV</p>
+                          </div>
+                          <Input id="file-upload" type="file" onChange={handleFileUpload} accept=".xlsx, .xls, .csv" className="hidden" />
+                        </Label>
+                      </div>
 
-                    {contacts.length > 0 && (
-                      <>
-                        <div className="flex justify-between items-center mt-6 mb-2">
-                          <h3 className="text-lg font-semibold">Contatos Carregados ({contacts.length})</h3>
-                          <Button variant="ghost" size="sm" onClick={clearContacts} className="flex items-center gap-2">
-                            <X className="h-4 w-4" />
-                            Limpar Lista
-                          </Button>
-                        </div>
-                        <div className="rounded-md border max-h-96 overflow-auto">
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Nome</TableHead>
-                                <TableHead>Telefone</TableHead>
-                                <TableHead>Status</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {contacts.map((contact, index) => (
-                                <TableRow key={index}>
-                                  <TableCell>{contact.nome}</TableCell>
-                                  <TableCell>{contact.telefone}</TableCell>
-                                  <TableCell>
-                                    <Badge variant="secondary">
-                                      Aguardando
-                                    </Badge>
-                                  </TableCell>
+                      {contacts.length > 0 && (
+                        <>
+                          <div className="flex justify-between items-center mt-6 mb-2">
+                            <h3 className="text-lg font-semibold">Contatos Carregados ({contacts.length})</h3>
+                            <Button variant="ghost" size="sm" onClick={clearContacts} className="flex items-center gap-2">
+                              <X className="h-4 w-4" />
+                              Limpar Lista
+                            </Button>
+                          </div>
+                          <div className="rounded-md border max-h-96 overflow-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Nome</TableHead>
+                                  <TableHead>Telefone</TableHead>
+                                  <TableHead>Status</TableHead>
                                 </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    className="w-full flex items-center gap-2"
-                    onClick={sendBulkMessages}
-                    disabled={isLoading || contacts.length === 0}
-                  >
-                    {isLoading ? 'Enviando...' : `Enviar para ${contacts.length} contatos`}
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
+                              </TableHeader>
+                              <TableBody>
+                                {contacts.map((contact, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell>{contact.nome}</TableCell>
+                                    <TableCell>{contact.telefone}</TableCell>
+                                    <TableCell>
+                                      <Badge variant="secondary">
+                                        Aguardando
+                                      </Badge>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      className="w-full flex items-center gap-2"
+                      onClick={sendBulkMessages}
+                      disabled={isLoading || contacts.length === 0}
+                    >
+                      {isLoading ? 'Enviando...' : `Enviar para ${contacts.length} contatos`}
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </TiltCard>
             </div>
           </TabsContent>
         </Tabs>
