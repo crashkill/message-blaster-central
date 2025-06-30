@@ -1,0 +1,27 @@
+{
+  "totalMessages": 6,
+  "sentToday": 6,
+  "successCount": 6,
+  "failedCount": 0,
+  "responseTime": [
+    0.392,
+    0.322,
+    0.288,
+    0.228,
+    0.231,
+    0.284
+  ],
+  "activeContacts": [
+    "11996723582",
+    "11973366621"
+  ],
+  "scheduledMessages": 1,
+  "hourlyStats": {
+    "19": 5,
+    "20": 1
+  },
+  "dailyStats": {
+    "2025-06-30": 6
+  },
+  "lastReset": "2025-06-30"
+}

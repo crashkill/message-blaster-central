@@ -1,0 +1,35 @@
+Servidor rodando na porta 3001
+📅 1 mensagens agendadas carregadas
+📊 Estatísticas enviadas: {
+  totalMessages: 2,
+  sentToday: 2,
+  successRate: 50,
+  failedMessages: 0,
+  averageResponseTime: 0,
+  activeContacts: 1,
+  scheduledMessages: 0,
+  popularHours: [ { hour: 16, count: 1 } ]
+}
+Frontend conectado via Socket.io
+Frontend desconectado
+📊 Estatísticas enviadas: {
+  totalMessages: 2,
+  sentToday: 2,
+  successRate: 50,
+  failedMessages: 0,
+  averageResponseTime: 0,
+  activeContacts: 1,
+  scheduledMessages: 0,
+  popularHours: [ { hour: 16, count: 1 } ]
+}
+📅⏳ Sistema automático aguardando WhatsApp conectar...
+📅⏳ Sistema automático aguardando WhatsApp conectar...
+Promise rejeitada não tratada: ProtocolError: Protocol error (Runtime.callFunctionOn): Target closed.
+    at /Users/fabriciocardosodelima/Desktop/message-blaster-central/server/node_modules/puppeteer-core/lib/cjs/puppeteer/common/Connection.js:329:24
+    at new Promise (<anonymous>)
+    at CDPSessionImpl.send (/Users/fabriciocardosodelima/Desktop/message-blaster-central/server/node_modules/puppeteer-core/lib/cjs/puppeteer/common/Connection.js:325:16)
+    at ExecutionContext._ExecutionContext_evaluate (/Users/fabriciocardosodelima/Desktop/message-blaster-central/server/node_modules/puppeteer-core/lib/cjs/puppeteer/common/ExecutionContext.js:211:46)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ExecutionContext.evaluate (/Users/fabriciocardosodelima/Desktop/message-blaster-central/server/node_modules/puppeteer-core/lib/cjs/puppeteer/common/ExecutionContext.js:107:16) {
+  originalMessage: ''
+}

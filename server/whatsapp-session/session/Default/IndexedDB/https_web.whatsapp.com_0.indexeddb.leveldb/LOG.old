@@ -1,0 +1,62 @@
+2025/06/30-19:12:03.527 a403 Reusing MANIFEST /Users/fabriciocardosodelima/Desktop/message-blaster-central/server/whatsapp-session/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/06/30-19:12:03.528 a403 Recovering log #1325
+2025/06/30-19:12:03.565 a403 Reusing old log /Users/fabriciocardosodelima/Desktop/message-blaster-central/server/whatsapp-session/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001325.log 
+2025/06/30-19:12:05.296 ad03 Level-0 table #1350: started
+2025/06/30-19:12:05.322 ad03 Level-0 table #1350: 245697 bytes OK
+2025/06/30-19:12:05.364 ad03 Delete type=0 #1325
+2025/06/30-19:12:05.365 ad03 Manual compaction at level-0 from '\x000\x00\x00\x00' @ 72057594037927935 : 1 .. '\x001\x00\x00\x00' @ 0 : 0; will stop at '\x000\x00\x00\x05' @ 3974765 : 1
+2025/06/30-19:12:05.365 ad03 Compacting 1@0 + 0@1 files
+2025/06/30-19:12:05.391 ad03 Generated table #1351@0: 5375 keys, 101197 bytes
+2025/06/30-19:12:05.413 ad03 Generated table #1352@0: 1372 keys, 29053 bytes
+2025/06/30-19:12:05.414 ad03 Compacted 1@0 + 0@1 files => 130250 bytes
+2025/06/30-19:12:05.456 ad03 compacted to: files[ 0 2 20 0 0 0 0 ]
+2025/06/30-19:12:05.456 ad03 Delete type=2 #1350
+2025/06/30-19:12:05.457 ad03 Manual compaction at level-0 from '\x000\x00\x00\x05' @ 3974765 : 1 .. '\x001\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/06/30-19:12:07.674 ad03 Compacting 1@1 + 10@2 files
+2025/06/30-19:12:07.785 ad03 Generated table #1353@1: 49421 keys, 2206314 bytes
+2025/06/30-19:12:07.899 ad03 Generated table #1354@1: 54846 keys, 2218444 bytes
+2025/06/30-19:12:07.960 ad03 Generated table #1355@1: 9762 keys, 2158955 bytes
+2025/06/30-19:12:08.016 ad03 Generated table #1356@1: 2385 keys, 2155281 bytes
+2025/06/30-19:12:08.076 ad03 Generated table #1357@1: 1888 keys, 2150328 bytes
+2025/06/30-19:12:08.121 ad03 Generated table #1358@1: 3078 keys, 2156866 bytes
+2025/06/30-19:12:08.181 ad03 Generated table #1359@1: 2788 keys, 2156421 bytes
+2025/06/30-19:12:08.255 ad03 Generated table #1360@1: 18828 keys, 2188114 bytes
+2025/06/30-19:12:08.372 ad03 Generated table #1361@1: 28410 keys, 2273074 bytes
+2025/06/30-19:12:08.457 ad03 Generated table #1362@1: 31536 keys, 2024629 bytes
+2025/06/30-19:12:08.457 ad03 Compacted 1@1 + 10@2 files => 21688426 bytes
+2025/06/30-19:12:08.504 ad03 compacted to: files[ 0 1 20 0 0 0 0 ]
+2025/06/30-19:12:08.505 ad03 Delete type=2 #1340
+2025/06/30-19:12:08.505 ad03 Delete type=2 #1341
+2025/06/30-19:12:08.505 ad03 Delete type=2 #1343
+2025/06/30-19:12:08.505 ad03 Delete type=2 #1342
+2025/06/30-19:12:08.505 ad03 Delete type=2 #1346
+2025/06/30-19:12:08.505 ad03 Delete type=2 #1347
+2025/06/30-19:12:08.505 ad03 Delete type=2 #1351
+2025/06/30-19:12:08.505 ad03 Delete type=2 #1345
+2025/06/30-19:12:08.505 ad03 Delete type=2 #1344
+2025/06/30-19:12:08.505 ad03 Delete type=2 #1338
+2025/06/30-19:12:08.505 ad03 Delete type=2 #1339
+2025/06/30-19:12:08.789 ad03 Compacting 1@1 + 10@2 files
+2025/06/30-19:12:08.891 ad03 Generated table #1363@1: 24431 keys, 2283249 bytes
+2025/06/30-19:12:08.953 ad03 Generated table #1364@1: 9876 keys, 2176671 bytes
+2025/06/30-19:12:09.009 ad03 Generated table #1365@1: 5539 keys, 2126017 bytes
+2025/06/30-19:12:09.089 ad03 Generated table #1366@1: 49045 keys, 2183520 bytes
+2025/06/30-19:12:09.199 ad03 Generated table #1367@1: 96887 keys, 2246704 bytes
+2025/06/30-19:12:09.336 ad03 Generated table #1368@1: 96048 keys, 2245372 bytes
+2025/06/30-19:12:09.455 ad03 Generated table #1369@1: 97055 keys, 2245224 bytes
+2025/06/30-19:12:09.566 ad03 Generated table #1370@1: 95767 keys, 2246035 bytes
+2025/06/30-19:12:09.704 ad03 Generated table #1371@1: 96772 keys, 2245573 bytes
+2025/06/30-19:12:09.762 ad03 Generated table #1372@1: 33520 keys, 787760 bytes
+2025/06/30-19:12:09.762 ad03 Compacted 1@1 + 10@2 files => 20786125 bytes
+2025/06/30-19:12:09.800 ad03 compacted to: files[ 0 0 20 0 0 0 0 ]
+2025/06/30-19:12:09.801 ad03 Delete type=2 #1352
+2025/06/30-19:12:09.801 ad03 Delete type=2 #1337
+2025/06/30-19:12:09.801 ad03 Delete type=2 #1336
+2025/06/30-19:12:09.801 ad03 Delete type=2 #1334
+2025/06/30-19:12:09.801 ad03 Delete type=2 #1335
+2025/06/30-19:12:09.801 ad03 Delete type=2 #1331
+2025/06/30-19:12:09.801 ad03 Delete type=2 #1330
+2025/06/30-19:12:09.801 ad03 Delete type=2 #1332
+2025/06/30-19:12:09.801 ad03 Delete type=2 #1333
+2025/06/30-19:12:09.801 ad03 Delete type=2 #1315
+2025/06/30-19:12:09.801 ad03 Delete type=2 #1329
