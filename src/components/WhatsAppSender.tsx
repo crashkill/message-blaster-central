@@ -11,10 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Upload, Send, MessageSquare, Users, Moon, Sun, Eye, X, Download, Wifi, WifiOff } from 'lucide-react';
+import { Upload, Send, MessageSquare, Users, Moon, Sun, Eye, X, Download, Wifi, WifiOff, LogOut } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx';
-import InputMask from 'react-input-mask';
+// import InputMask from 'react-input-mask'; // Removido para eliminar warning findDOMNode
 import TiltCard from '@/components/TiltCard';
 
 interface Contact {
@@ -36,7 +36,31 @@ const WhatsAppSender = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [qrCode, setQrCode] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Função para formatar telefone (substituindo react-input-mask)
+  const formatPhone = (value: string) => {
+    // Remove tudo que não é número
+    const numbers = value.replace(/\D/g, '');
+    
+    // Aplica formatação (XX) XXXXX-XXXX
+    if (numbers.length <= 2) {
+      return `(${numbers}`;
+    } else if (numbers.length <= 7) {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    } else {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setIndividualContact({
+      ...individualContact,
+      telefone: formatted
+    });
+  };
   const [connectionStatus, setConnectionStatus] = useState('connecting');
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -47,8 +71,10 @@ const WhatsAppSender = () => {
     });
 
     socket.on('qr', (qr) => {
+      console.log('📱 QR Code recebido do servidor:', qr ? 'SIM' : 'NÃO');
+      console.log('📱 QR Code length:', qr?.length || 0);
       setQrCode(qr);
-      setIsModalOpen(true);
+      // Não abre automaticamente, apenas armazena o QR Code
     });
     
     socket.on('ready', () => {
@@ -61,6 +87,7 @@ const WhatsAppSender = () => {
     });
 
     socket.on('status', (status) => {
+        console.log('🔄 Status atualizado para:', status);
         setConnectionStatus(status);
     });
 
@@ -68,6 +95,90 @@ const WhatsAppSender = () => {
       socket.disconnect();
     };
   }, []);
+
+  const handleWhatsAppConnection = () => {
+    console.log('🔍 Debug - connectionStatus:', connectionStatus);
+    console.log('🔍 Debug - qrCode exists:', !!qrCode);
+    console.log('🔍 Debug - qrCode length:', qrCode?.length || 0);
+    
+    if (connectionStatus === 'ready') {
+      toast({
+        title: "WhatsApp já conectado!",
+        description: "Você já está conectado e pode enviar mensagens.",
+        variant: "default",
+      });
+    } else if (qrCode) {
+      console.log('✅ Abrindo modal do QR Code');
+      setIsModalOpen(true);
+    } else {
+      console.log('⚠️ QR Code não disponível, solicitando geração...');
+      // Força a abertura do modal mesmo sem QR Code para mostrar "Carregando..."
+      setIsModalOpen(true);
+      toast({
+        title: "Aguardando QR Code...",
+        description: "O servidor está gerando o código QR. Tente novamente em alguns segundos.",
+        variant: "default",
+      });
+    }
+  };
+
+  const handleWhatsAppDisconnect = async () => {
+    if (isDisconnecting) return; // Previne múltiplos cliques
+    
+    setIsDisconnecting(true);
+    try {
+      console.log('🔌 Desconectando WhatsApp...');
+      
+      const response = await fetch('http://localhost:3001/api/disconnect', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('✅ WhatsApp desconectado com sucesso');
+        toast({
+          title: "WhatsApp desconectado!",
+          description: data.message || "Você foi desconectado com sucesso. Clique em 'Conectar WhatsApp' para gerar um novo QR Code.",
+          variant: "default",
+        });
+        setQrCode(null); // Limpa o QR Code atual
+      } else {
+        console.error('❌ Erro retornado pelo servidor:', data.error);
+        toast({
+          title: "Erro ao desconectar",
+          description: data.error || "Falha ao desconectar do WhatsApp.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('❌ Erro ao desconectar:', error);
+      
+      // Verifica se é erro de conexão
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        toast({
+          title: "Servidor Offline",
+          description: "Não foi possível conectar ao servidor. Verifique se ele está rodando na porta 3001.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro de Comunicação",
+          description: error.message || "Erro inesperado ao se comunicar com o servidor.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setIsDisconnecting(false);
+    }
+  };
 
   const normalizePhone = (phone: string): string => {
     // Remove todos os caracteres não numéricos
@@ -285,6 +396,50 @@ const WhatsAppSender = () => {
                      connectionStatus === 'disconnected' ? 'Desconectado' : 'Conectando...'}
                 </span>
             </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant={connectionStatus === 'ready' ? 'default' : 'outline'}
+                size="sm"
+                onClick={handleWhatsAppConnection}
+                className="flex items-center gap-2"
+              >
+                {connectionStatus === 'ready' ? (
+                  <>
+                    <Wifi className="h-4 w-4" />
+                    Conectado
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="h-4 w-4" />
+                    Conectar WhatsApp
+                  </>
+                )}
+              </Button>
+              
+              {connectionStatus === 'ready' && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleWhatsAppDisconnect}
+                  disabled={isDisconnecting}
+                  className="flex items-center gap-2"
+                >
+                  {isDisconnecting ? (
+                    <>
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      Desconectando...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className="h-4 w-4" />
+                      Desconectar
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+            
             <Button
               variant="outline"
               size="icon"
@@ -386,22 +541,13 @@ const WhatsAppSender = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="telefone">Telefone *</Label>
-                    <InputMask
-                      mask="(99) 99999-9999"
+                    <Input
+                      id="telefone"
+                      placeholder="(11) 99999-9999"
                       value={individualContact.telefone}
-                      onChange={(e) => setIndividualContact({
-                        ...individualContact,
-                        telefone: e.target.value
-                      })}
-                    >
-                      {(inputProps: any) => (
-                        <Input
-                          {...inputProps}
-                          id="telefone"
-                          placeholder="(11) 99999-9999"
-                        />
-                      )}
-                    </InputMask>
+                      onChange={handlePhoneChange}
+                      maxLength={15}
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -516,13 +662,34 @@ const WhatsAppSender = () => {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Conecte seu WhatsApp</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-green-600" />
+              Conectar WhatsApp
+            </DialogTitle>
             <DialogDescription>
-              Escaneie o QR Code abaixo com o app do WhatsApp no seu celular para iniciar a sessão.
+              Para usar a Galatéia, você precisa conectar seu WhatsApp. Siga os passos:
+              <br />
+              <br />
+              1. Abra o WhatsApp no seu celular
+              <br />
+              2. Vá em <strong>Configurações → Aparelhos conectados</strong>
+              <br />
+              3. Toque em <strong>"Conectar um aparelho"</strong>
+              <br />
+              4. Escaneie o QR Code abaixo
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-center p-4 bg-white">
-            {qrCode && <QRCode value={qrCode} size={256} />}
+          <div className="flex justify-center p-4 bg-white dark:bg-gray-100 rounded-lg">
+            {qrCode ? (
+              <QRCode value={qrCode} size={256} />
+            ) : (
+              <div className="flex items-center justify-center h-64 w-64 bg-gray-100 dark:bg-gray-200 rounded">
+                <span className="text-gray-500">Carregando QR Code...</span>
+              </div>
+            )}
+          </div>
+          <div className="text-center text-sm text-gray-500">
+            O QR Code é atualizado automaticamente para sua segurança
           </div>
         </DialogContent>
       </Dialog>
